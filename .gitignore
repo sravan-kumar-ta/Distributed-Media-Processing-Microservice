@@ -1,0 +1,41 @@
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Virtual Environments
+.venv/
+venv/
+env/
+ENV/
+bin/
+lib/
+
+# Environment Variables and Secrets (NEVER commit these)
+.env
+.env.*
+!.env.example
+secrets.toml
+
+# IDEs and Editors
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Testing and Coverage
+.pytest_cache/
+.coverage
+htmlcov/
+
+# Local Databases (SQLAlchemy / SQLModel defaults)
+*.db
+*.sqlite
+
+# OS Generated
+.DS_Store
+Thumbs.db
+
+# This project special
+storage/
+sample.txt

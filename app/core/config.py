@@ -1,0 +1,17 @@
+from pydantic_settings import BaseSettings
+
+
+class Settings(BaseSettings):
+    storage_type: str = "local"
+    local_storage_path: str = "storage"
+
+    aws_access_key_id: str
+    aws_secret_access_key: str
+    aws_region: str
+    aws_bucket_name: str
+
+    class Config:
+        env_file = ".env"
+
+
+settings = Settings()
