@@ -7,6 +7,9 @@ class Settings(BaseSettings):
     aws_region: str
     aws_bucket_name: str
 
+    redis_host: str = "localhost"
+    redis_port: int = 6379
+
     class Config:
         env_file = ".env"
 
