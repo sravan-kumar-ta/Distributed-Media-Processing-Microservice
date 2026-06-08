@@ -10,13 +10,21 @@ class JobService:
     def _key(self, job_id: str):
         return f"{self.PREFIX}:{job_id}"
 
-    def create_job(self, file_id: str, operation: str):
+    def create_job(
+        self,
+        file_id: str,
+        operation: str,
+        width: int | None = None,
+        height: int | None = None,
+    ):
         job_id = str(uuid.uuid4())
 
         job = {
             "job_id": job_id,
             "file_id": file_id,
             "operation": operation,
+            "width": width,
+            "height": height,
             "status": "pending",
         }
 

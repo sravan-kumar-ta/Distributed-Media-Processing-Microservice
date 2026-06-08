@@ -23,6 +23,8 @@ def create_job(payload: CreateJobRequest):
     job = job_service.create_job(
         file_id=payload.file_id,
         operation=payload.operation,
+        width=payload.width,
+        height=payload.height,
     )
 
     process_jobs.delay(job["job_id"])
