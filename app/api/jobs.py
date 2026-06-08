@@ -1,8 +1,9 @@
-from fastapi import APIRouter, BackgroundTasks, HTTPException
+from fastapi import APIRouter, HTTPException
 
 from app.schemas.job import CreateJobRequest, JobResponse
 from app.services.job_service import job_service
-from app.services.process_job import process_job
+
+from app.tasks.process_job import process_jobs
 
 router = APIRouter()
 
@@ -15,7 +16,7 @@ ALLOWED_OPERATIONS = {
 
 
 @router.post("/jobs", response_model=JobResponse)
-def create_job(payload: CreateJobRequest, background_tasks: BackgroundTasks):
+def create_job(payload: CreateJobRequest):
     if payload.operation not in ALLOWED_OPERATIONS:
         raise HTTPException(status_code=400, detail="Invalid operation")
 
@@ -24,7 +25,7 @@ def create_job(payload: CreateJobRequest, background_tasks: BackgroundTasks):
         operation=payload.operation,
     )
 
-    background_tasks.add_task(process_job, job["job_id"])
+    process_jobs.delay(job["job_id"])
 
     return JobResponse(
         job_id=job["job_id"],
