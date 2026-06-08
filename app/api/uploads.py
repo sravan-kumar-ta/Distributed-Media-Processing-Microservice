@@ -1,3 +1,5 @@
+import shutil
+import tempfile
 import uuid
 from pathlib import Path
 
@@ -13,17 +15,35 @@ router = APIRouter()
 async def upload_file(request: Request, file: UploadFile = File(...)):
     extension = Path(file.filename).suffix
     file_id = str(uuid.uuid4())
-    filename = f"{file_id}{extension}"
-    storage = request.app.state.storage
-    storage.save_upload(file=file, filename=filename)
 
-    file_service.save_file_metadata(
-        file_id=file_id,
-        storage_key=filename,
-        original_filename=file.filename,
-    )
+    storage_key = f"uploads/{file_id}{extension}"
+
+    storage = request.app.state.storage
+
+    with tempfile.NamedTemporaryFile(
+        delete=False,
+        suffix=extension,
+    ) as tmp_file:
+        shutil.copyfileobj(
+            file.file,
+            tmp_file,
+        )
+
+        temp_path = tmp_file.name
+
+    try:
+        storage.upload(local_path=temp_path, object_key=storage_key)
+
+        file_service.save_file_metadata(
+            file_id=file_id,
+            storage_key=storage_key,
+            original_filename=file.filename,
+        )
+
+    finally:
+        Path(temp_path).unlink(missing_ok=True)
 
     return UploadResponse(
         file_id=file_id,
-        file_path=filename,
+        file_path=storage_key,
     )

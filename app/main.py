@@ -8,13 +8,13 @@ USE_LOCAL_STORAGE = True
 
 
 if USE_LOCAL_STORAGE:
-    from app_local.local_storage import LocalStorage
+    from app.storage.local import LocalStorage
 
     storage = LocalStorage()
 else:
-    from app.services.s3_service import S3Service
+    from app.storage.s3 import S3Storage
 
-    storage = S3Service()
+    storage = S3Storage()
 
 
 app = FastAPI(title="Media Processor")

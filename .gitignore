@@ -37,5 +37,5 @@ htmlcov/
 Thumbs.db
 
 # This project special
-storage/
+/storage/
 sample.txt
