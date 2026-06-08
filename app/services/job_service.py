@@ -26,6 +26,8 @@ class JobService:
             "width": width,
             "height": height,
             "status": "pending",
+            "result_path": None,
+            "error": None,
         }
 
         redis_client.set(self._key(job_id), json.dumps(job))
@@ -40,13 +42,25 @@ class JobService:
 
         return json.loads(data)
 
-    def update_status(self, job_id: str, status: str):
+    def update_status(
+        self,
+        job_id: str,
+        status: str,
+        result_path: str | None = None,
+        error: str | None = None,
+    ):
         job = self.get_job(job_id)
 
         if not job:
             return
 
         job["status"] = status
+        
+        if result_path is not None:
+            job["result_path"] = result_path
+
+        if error is not None:
+            job["error"] = error
 
         redis_client.set(
             self._key(job_id),

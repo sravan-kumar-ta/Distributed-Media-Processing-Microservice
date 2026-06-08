@@ -1,6 +1,6 @@
 from fastapi import APIRouter, HTTPException
 
-from app.schemas.job import CreateJobRequest, JobResponse
+from app.schemas.job import CreateJobRequest, JobResponse, JobDetailResponse
 from app.services.job_service import job_service
 
 from app.tasks.process_job import process_jobs
@@ -20,6 +20,14 @@ def create_job(payload: CreateJobRequest):
     if payload.operation not in ALLOWED_OPERATIONS:
         raise HTTPException(status_code=400, detail="Invalid operation")
 
+    if payload.operation == "resize" and (
+        payload.width is None or payload.height is None
+    ):
+        raise HTTPException(
+            status_code=400,
+            detail=("width and height required"),
+        )
+
     job = job_service.create_job(
         file_id=payload.file_id,
         operation=payload.operation,
@@ -35,7 +43,7 @@ def create_job(payload: CreateJobRequest):
     )
 
 
-@router.get("/jobs/{job_id}")
+@router.get("/jobs/{job_id}", response_model=JobDetailResponse)
 def get_job(job_id: str):
     job = job_service.get_job(job_id)
 

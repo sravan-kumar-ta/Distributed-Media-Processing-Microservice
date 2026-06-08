@@ -7,9 +7,9 @@ from app.services.job_service import job_service
 @celery_app.task(name="process_jobs")
 def process_jobs(job_id: str):
     try:
-        job = job_service.get_job(job_id)
-
         job_service.update_status(job_id, "processing")
+
+        job = job_service.get_job(job_id)
 
         file_meta = file_service.get_file_metadata(job["file_id"])
 
@@ -29,11 +29,20 @@ def process_jobs(job_id: str):
                 output_path=output_path,
             )
 
-        job_service.update_status(job_id, "completed")
+        job_service.update_status(
+            job_id,
+            "completed",
+            result_path=output_path,
+        )
 
-        return f"Success: Status changed."
+        return f"Success: Operation completed."
 
-    except Exception:
-        job_service.update_status(job_id, "failed")
+    except Exception as exc:
+
+        job_service.update_job(
+            job_id,
+            status="failed",
+            error=str(exc),
+        )
 
         raise

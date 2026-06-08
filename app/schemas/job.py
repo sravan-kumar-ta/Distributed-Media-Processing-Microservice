@@ -13,3 +13,12 @@ class CreateJobRequest(BaseModel):
 class JobResponse(BaseModel):
     job_id: str
     status: str
+
+
+class JobDetailResponse(BaseModel):
+    job_id: str
+    file_id: str
+    operation: str
+    status: str
+    result_path: Optional[str]
+    error: Optional[str]
