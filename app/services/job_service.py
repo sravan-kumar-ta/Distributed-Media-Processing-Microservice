@@ -27,6 +27,7 @@ class JobService:
             "height": height,
             "status": "pending",
             "result_path": None,
+            "result_data": None,
             "error": None,
         }
 
@@ -47,6 +48,7 @@ class JobService:
         job_id: str,
         status: str,
         result_path: str | None = None,
+        result_data: dict | None = None,
         error: str | None = None,
     ):
         job = self.get_job(job_id)
@@ -58,6 +60,9 @@ class JobService:
         
         if result_path is not None:
             job["result_path"] = result_path
+        
+        if result_data is not None:
+            job["result_data"] = result_data
 
         if error is not None:
             job["error"] = error

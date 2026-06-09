@@ -3,15 +3,16 @@ from fastapi import APIRouter, HTTPException
 from app.schemas.job import CreateJobRequest, JobResponse, JobDetailResponse
 from app.services.job_service import job_service
 
-from app.tasks.process_job import process_jobs
+from app.tasks.process_job import process_job
 
 router = APIRouter()
 
 ALLOWED_OPERATIONS = {
     "resize",
-    "compress",
-    "watermark",
     "thumbnail",
+
+    "video_thumbnail",
+    "video_metadata",
 }
 
 
@@ -35,7 +36,7 @@ def create_job(payload: CreateJobRequest):
         height=payload.height,
     )
 
-    process_jobs.delay(job["job_id"])
+    process_job.delay(job["job_id"])
 
     return JobResponse(
         job_id=job["job_id"],

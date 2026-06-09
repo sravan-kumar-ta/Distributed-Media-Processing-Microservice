@@ -2,7 +2,6 @@ from pydantic import BaseModel
 from typing import Optional
 
 
-# eg ops: resize, compress, watermark, thumbnail
 class CreateJobRequest(BaseModel):
     file_id: str
     operation: str
@@ -20,5 +19,8 @@ class JobDetailResponse(BaseModel):
     file_id: str
     operation: str
     status: str
+
     result_path: Optional[str]
+    result_data: Optional[dict]
+
     error: Optional[str]
