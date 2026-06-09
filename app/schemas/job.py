@@ -23,4 +23,5 @@ class JobDetailResponse(BaseModel):
     result_path: Optional[str]
     result_data: Optional[dict]
 
+    duration: Optional[float]
     error: Optional[str]

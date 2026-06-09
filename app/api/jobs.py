@@ -10,7 +10,6 @@ router = APIRouter()
 ALLOWED_OPERATIONS = {
     "resize",
     "thumbnail",
-
     "video_thumbnail",
     "video_metadata",
 }
@@ -52,3 +51,8 @@ def get_job(job_id: str):
         raise HTTPException(status_code=404, detail="Job not found")
 
     return job
+
+
+@router.get("/jobs")
+def list_jobs():
+    return job_service.list_jobs()

@@ -28,6 +28,7 @@ class JobService:
             "status": "pending",
             "result_path": None,
             "result_data": None,
+            "duration": None,
             "error": None,
         }
 
@@ -49,6 +50,7 @@ class JobService:
         status: str,
         result_path: str | None = None,
         result_data: dict | None = None,
+        duration: float | None = None,
         error: str | None = None,
     ):
         job = self.get_job(job_id)
@@ -57,12 +59,15 @@ class JobService:
             return
 
         job["status"] = status
-        
+
         if result_path is not None:
             job["result_path"] = result_path
-        
+
         if result_data is not None:
             job["result_data"] = result_data
+        
+        if duration is not None:
+            job["duration"] = duration
 
         if error is not None:
             job["error"] = error
@@ -71,6 +76,17 @@ class JobService:
             self._key(job_id),
             json.dumps(job),
         )
+
+    def list_jobs(self):
+        jobs = []
+
+        for key in redis_client.scan_iter("job:*"):
+            data = redis_client.get(key)
+
+            if data:
+                jobs.append(json.loads(data))
+
+        return jobs
 
 
 job_service = JobService()
