@@ -20,8 +20,10 @@ class JobDetailResponse(BaseModel):
     operation: str
     status: str
 
-    result_path: Optional[str]
-    result_data: Optional[dict]
+    result_path: str | None = None
+    result_type: str | None = None
+    result_data: dict | None = None
 
-    duration: Optional[float]
-    error: Optional[str]
+    download_url: str | None = None
+    duration: float | None = None
+    error: str | None = None

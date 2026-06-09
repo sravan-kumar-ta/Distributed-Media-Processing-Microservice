@@ -27,6 +27,7 @@ class JobService:
             "height": height,
             "status": "pending",
             "result_path": None,
+            "result_type": None,
             "result_data": None,
             "duration": None,
             "error": None,
@@ -49,6 +50,7 @@ class JobService:
         job_id: str,
         status: str,
         result_path: str | None = None,
+        result_type: dict | None = None,
         result_data: dict | None = None,
         duration: float | None = None,
         error: str | None = None,
@@ -63,9 +65,12 @@ class JobService:
         if result_path is not None:
             job["result_path"] = result_path
 
+        if result_type is not None:
+            job["result_type"] = result_type
+
         if result_data is not None:
             job["result_data"] = result_data
-        
+
         if duration is not None:
             job["duration"] = duration
 
@@ -87,6 +92,10 @@ class JobService:
                 jobs.append(json.loads(data))
 
         return jobs
+
+    def delete_job(self, job_id: str):
+        # returns 1 or 0
+        return redis_client.delete(self._key(job_id))
 
 
 job_service = JobService()

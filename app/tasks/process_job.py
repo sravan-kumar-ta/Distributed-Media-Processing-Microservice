@@ -75,6 +75,7 @@ def process_job(job_id: str):
                     job_id=job_id,
                     status="completed",
                     result_data=metadata,
+                    result_type="application/json",
                     duration=duration,
                 )
 
@@ -98,6 +99,7 @@ def process_job(job_id: str):
             job_id=job_id,
             status="completed",
             result_path=result_key,
+            result_type="image/jpeg",
             duration=duration,
         )
 
