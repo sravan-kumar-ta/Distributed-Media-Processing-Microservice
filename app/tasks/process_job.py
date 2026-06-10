@@ -81,6 +81,51 @@ def process_job(job_id: str):
 
                 return "Success: Metadata extracted."
 
+            elif job["operation"] == "video_compress":
+                output_file = tmp_dir / "compressed.mp4"
+                video_service.compress_video(
+                    input_path=str(input_file),
+                    output_path=str(output_file),
+                )
+
+                result_key = f"processed/{job_id}.mp4"
+
+                storage.upload(
+                    local_path=str(output_file),
+                    object_key=result_key,
+                )
+
+                job_service.update_status(
+                    job_id=job_id,
+                    status="completed",
+                    result_path=result_key,
+                    result_type="video/mp4",
+                )
+
+                return "Success: Video compressed."
+
+            elif job["operation"] == "audio_extract":
+                output_file = tmp_dir / "audio_extract.mp3"
+                video_service.extract_audio(
+                    input_path=str(input_file),
+                    output_path=str(output_file),
+                )
+
+                result_key = f"processed/{job_id}.mp3"
+
+                storage.upload(
+                    local_path=str(output_file),
+                    object_key=result_key,
+                )
+
+                job_service.update_status(
+                    job_id=job_id,
+                    status="completed",
+                    result_path=result_key,
+                    result_type="audio/mp3",
+                )
+
+                return "Success: Audio extracted."
             else:
                 raise Exception(f"Unsupported operation: " f"{job['operation']}")
 

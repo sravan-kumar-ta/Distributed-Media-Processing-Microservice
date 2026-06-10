@@ -16,6 +16,8 @@ ALLOWED_OPERATIONS = {
     "thumbnail",
     "video_thumbnail",
     "video_metadata",
+    "video_compress",
+    "audio_extract",
 }
 
 
