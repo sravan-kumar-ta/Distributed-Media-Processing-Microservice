@@ -1,0 +1,45 @@
+services:
+  api:
+    build: .
+    container_name: media-api
+    ports:
+      - "8000:8000"
+    depends_on:
+      - redis
+      - rabbitmq
+    environment:
+      REDIS_URL: redis://redis:6379/0
+      BROKER_URL: amqp://media:password123@rabbitmq:5672//
+    volumes:
+      - .:/app
+      - ./storage:/app/storage
+
+  worker:
+    build: .
+    container_name: media-worker
+    command: celery -A app.core.celery_app worker --loglevel=info
+    depends_on:
+      - redis
+      - rabbitmq
+    environment:
+      REDIS_URL: redis://redis:6379/0
+      BROKER_URL: amqp://media:password123@rabbitmq:5672//
+    volumes:
+      - .:/app
+      - ./storage:/app/storage
+
+  redis:
+    image: redis:7
+    container_name: media-redis
+    ports:
+      - "6379:6379"
+
+  rabbitmq:
+    image: rabbitmq:3-management
+    container_name: media-rabbitmq
+    ports:
+      - "5672:5672"
+      - "15672:15672"
+    environment:
+      RABBITMQ_DEFAULT_USER: media
+      RABBITMQ_DEFAULT_PASS: password123
