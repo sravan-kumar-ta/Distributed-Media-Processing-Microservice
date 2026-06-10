@@ -1,7 +1,9 @@
 from app.storage.local import LocalStorage
 from app.storage.s3 import S3Storage
 
-USE_LOCAL_STORAGE = True
+from app.core.config import settings
+
+USE_LOCAL_STORAGE = settings.use_local_storage
 
 
 def get_storage():

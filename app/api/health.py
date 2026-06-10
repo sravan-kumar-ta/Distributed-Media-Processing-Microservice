@@ -29,10 +29,10 @@ def health():
     try:
         connection = pika.BlockingConnection(
             pika.ConnectionParameters(
-                host="localhost",
+                host="rabbitmq",
                 credentials=pika.PlainCredentials(
                     "media",
-                    "password123,",
+                    "password123",
                 ),
             )
         )
@@ -41,8 +41,8 @@ def health():
 
         health_status["rabbitmq"] = "connected"
 
-    except Exception:
-        health_status["rabbitmq"] = "failed"
+    except Exception as exc:
+        health_status["rabbitmq"] = f"failed: {exc}"
 
     # Storage
     try:

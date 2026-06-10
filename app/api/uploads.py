@@ -7,6 +7,7 @@ from fastapi import APIRouter, File, HTTPException, Request, UploadFile
 
 from app.schemas.upload import UploadResponse
 from app.services.file_service import file_service
+from app.storage.factory import get_storage
 
 router = APIRouter()
 
@@ -30,7 +31,7 @@ async def upload_file(request: Request, file: UploadFile = File(...)):
 
     storage_key = f"uploads/{file_id}{extension}"
 
-    storage = request.app.state.storage
+    storage = get_storage()
 
     with tempfile.NamedTemporaryFile(
         delete=False,

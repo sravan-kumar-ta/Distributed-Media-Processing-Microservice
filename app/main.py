@@ -5,22 +5,7 @@ from app.api.jobs import router as job_router
 from app.api.uploads import router as upload_router
 from app.services.storage_service import create_storage_dirs
 
-USE_LOCAL_STORAGE = False
-
-
-if USE_LOCAL_STORAGE:
-    from app.storage.local import LocalStorage
-
-    storage = LocalStorage()
-else:
-    from app.storage.s3 import S3Storage
-
-    storage = S3Storage()
-
-
 app = FastAPI(title="Media Processor")
-
-app.state.storage = storage
 
 create_storage_dirs()
 

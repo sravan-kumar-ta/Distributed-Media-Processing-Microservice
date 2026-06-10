@@ -7,6 +7,11 @@ class Settings(BaseSettings):
     aws_region: str
     aws_bucket_name: str
 
+    use_local_storage:bool
+
+    broker_url: str
+    redis_url: str
+
     redis_host: str = "localhost"
     redis_port: int = 6379
 

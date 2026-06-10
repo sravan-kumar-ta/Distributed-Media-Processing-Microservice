@@ -1,8 +1,10 @@
 from celery import Celery
 
+from app.core.config import settings
+
 celery_app = Celery(
     "media_processor",
-    broker="amqp://media:password123@localhost:5672//",
-    backend="redis://localhost:6379/0",
+    broker=settings.broker_url,
+    backend=settings.redis_url,
     include=["app.tasks.process_job"],
 )
