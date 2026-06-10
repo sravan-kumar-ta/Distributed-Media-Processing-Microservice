@@ -31,9 +31,7 @@ def create_job(payload: CreateJobRequest):
     if payload.operation not in ALLOWED_OPERATIONS:
         raise HTTPException(status_code=400, detail="Invalid operation")
 
-    if payload.operation == "resize" and (
-        payload.width is None or payload.height is None
-    ):
+    if payload.operation == "resize" and (payload.width < 1 or payload.height < 1):
         raise HTTPException(
             status_code=400,
             detail=("width and height required"),

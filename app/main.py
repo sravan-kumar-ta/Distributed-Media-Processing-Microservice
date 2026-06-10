@@ -5,7 +5,7 @@ from app.api.jobs import router as job_router
 from app.api.uploads import router as upload_router
 from app.services.storage_service import create_storage_dirs
 
-USE_LOCAL_STORAGE = True
+USE_LOCAL_STORAGE = False
 
 
 if USE_LOCAL_STORAGE:

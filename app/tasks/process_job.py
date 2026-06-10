@@ -1,14 +1,14 @@
 import time
+import tempfile
 
 from pathlib import Path
-import tempfile
 
 from app.core.celery_app import celery_app
 from app.services.file_service import file_service
-from app.services.image_service import image_service
 from app.services.job_service import job_service
-from app.services.video_service import video_service
 from app.storage.factory import get_storage
+
+from app.tasks.registry import OPERATIONS
 
 
 @celery_app.task(
@@ -18,127 +18,87 @@ from app.storage.factory import get_storage
     retry_backoff=True,
 )
 def process_job(job_id: str):
+    """
+    Main Celery worker task.
+
+    Workflow:
+        1. Load job metadata from Redis
+        2. Download source file from storage
+        3. Execute requested operation
+        4. Upload processed result
+        5. Update job status
+    """
     started_at = time.perf_counter()
+
     try:
+        # Mark job as actively being processed
         job_service.update_status(job_id, "processing")
 
+        # Retrieve job details
         job = job_service.get_job(job_id)
 
         if not job:
             raise Exception(f"Job {job_id} not found")
 
+        # Retrieve uploaded file metadata
         file_meta = file_service.get_file_metadata(job["file_id"])
 
         if not file_meta:
             raise Exception("File metadata not found")
 
+        # Lookup operation configuration
+        # (handler, output extension, content type, etc.)
+        operation = job["operation"]
+        config = OPERATIONS.get(operation)
+
+        if not config:
+            raise Exception(f"Unsupported operation: {operation}")
+
         storage = get_storage()
 
+        # Create isolated temporary workspace
+        # All processing happens here before uploading
         with tempfile.TemporaryDirectory() as tmp_dir:
             tmp_dir = Path(tmp_dir)
-            extension = Path(file_meta["storage_key"]).suffix
 
-            input_file = tmp_dir / f"input{extension}"
-            output_file = tmp_dir / "output.jpg"
+            # Preserve original file extension
+            input_extension = Path(file_meta["storage_key"]).suffix
+            input_file = tmp_dir / f"input{input_extension}"
 
+            # Download original file from storage
             storage.download(
                 object_key=file_meta["storage_key"],
                 local_path=str(input_file),
             )
 
-            if job["operation"] == "resize":
-                image_service.resize(
-                    input_path=str(input_file),
-                    output_path=str(output_file),
-                    width=job["width"],
-                    height=job["height"],
-                )
+            # Metadata operations return JSON data
+            # instead of producing a processed file.
+            if config["metadata_only"]:
+                metadata = config["handler"](job, input_file)
 
-            elif job["operation"] == "thumbnail":
-                image_service.create_thumbnail(
-                    input_path=str(input_file),
-                    output_path=str(output_file),
-                )
-
-            elif job["operation"] == "video_thumbnail":
-                video_service.generate_thumbnail(
-                    input_path=str(input_file),
-                    output_path=str(output_file),
-                )
-
-            elif job["operation"] == "watermark":
-                image_service.add_watermark(
-                    input_path=str(input_file),
-                    output_path=str(output_file),
-                    watermark_text=job["watermark_text"],
-                )
-
-            elif job["operation"] == "video_metadata":
-                metadata = video_service.get_metadata(
-                    input_path=str(input_file),
-                )
                 duration = round(time.perf_counter() - started_at, 3)
+
                 job_service.update_status(
                     job_id=job_id,
                     status="completed",
                     result_data=metadata,
-                    result_type="application/json",
+                    result_type=config["content_type"],
                     duration=duration,
                 )
 
                 return "Success: Metadata extracted."
 
-            elif job["operation"] == "video_compress":
-                output_file = tmp_dir / "compressed.mp4"
-                video_service.compress_video(
-                    input_path=str(input_file),
-                    output_path=str(output_file),
-                )
+            # File-producing operations
+            # Example:
+            #   resize -> .jpg
+            #   video_compress -> .mp4
+            #   audio_extract -> .mp3
+            output_file = tmp_dir / f"output{config['extension']}"
 
-                result_key = f"processed/{job_id}.mp4"
+            config["handler"](job, input_file, output_file)
 
-                storage.upload(
-                    local_path=str(output_file),
-                    object_key=result_key,
-                )
-
-                job_service.update_status(
-                    job_id=job_id,
-                    status="completed",
-                    result_path=result_key,
-                    result_type="video/mp4",
-                )
-
-                return "Success: Video compressed."
-
-            elif job["operation"] == "audio_extract":
-                output_file = tmp_dir / "audio_extract.mp3"
-                video_service.extract_audio(
-                    input_path=str(input_file),
-                    output_path=str(output_file),
-                )
-
-                result_key = f"processed/{job_id}.mp3"
-
-                storage.upload(
-                    local_path=str(output_file),
-                    object_key=result_key,
-                )
-
-                job_service.update_status(
-                    job_id=job_id,
-                    status="completed",
-                    result_path=result_key,
-                    result_type="audio/mpeg",
-                )
-
-                return "Success: Audio extracted."
-            else:
-                raise Exception(f"Unsupported operation: " f"{job['operation']}")
-
-            result_key = (
-                f"processed/" f"{job_id}.jpg"
-            )  # We have to change this if add video_compress
+            # Store processed result under a predictable key
+            result_key = f"processed/" f"{job_id}" f"{config['extension']}"
 
             storage.upload(
                 local_path=str(output_file),
@@ -147,22 +107,19 @@ def process_job(job_id: str):
 
         duration = round(time.perf_counter() - started_at, 3)
 
+        # Persist final success state
         job_service.update_status(
             job_id=job_id,
             status="completed",
             result_path=result_key,
-            result_type="image/jpeg",
+            result_type=config["content_type"],
             duration=duration,
         )
 
-        return f"Success: Operation completed."
+        return "Success: Operation completed."
 
     except Exception as exc:
-
-        job_service.update_status(
-            job_id=job_id,
-            status="failed",
-            error=str(exc),
-        )
+        # Persist failure information before Celery retries or marks task failed
+        job_service.update_status(job_id=job_id, status="failed", error=str(exc))
 
         raise
