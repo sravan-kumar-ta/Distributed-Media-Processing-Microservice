@@ -5,8 +5,9 @@ from typing import Optional
 class CreateJobRequest(BaseModel):
     file_id: str
     operation: str
-    width: Optional[int] = None
-    height: Optional[int] = None
+    width: int | None = None
+    height: int | None = None
+    watermark_text: str | None = None
 
 
 class JobResponse(BaseModel):

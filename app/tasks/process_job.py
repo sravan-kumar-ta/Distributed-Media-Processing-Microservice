@@ -66,6 +66,13 @@ def process_job(job_id: str):
                     output_path=str(output_file),
                 )
 
+            elif job["operation"] == "watermark":
+                image_service.add_watermark(
+                    input_path=str(input_file),
+                    output_path=str(output_file),
+                    watermark_text=job["watermark_text"],
+                )
+
             elif job["operation"] == "video_metadata":
                 metadata = video_service.get_metadata(
                     input_path=str(input_file),
@@ -122,7 +129,7 @@ def process_job(job_id: str):
                     job_id=job_id,
                     status="completed",
                     result_path=result_key,
-                    result_type="audio/mp3",
+                    result_type="audio/mpeg",
                 )
 
                 return "Success: Audio extracted."

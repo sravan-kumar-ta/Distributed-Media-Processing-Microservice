@@ -16,6 +16,7 @@ class JobService:
         operation: str,
         width: int | None = None,
         height: int | None = None,
+        watermark_text: str | None = None,
     ):
         job_id = str(uuid.uuid4())
 
@@ -25,6 +26,7 @@ class JobService:
             "operation": operation,
             "width": width,
             "height": height,
+            "watermark_text": watermark_text,
             "status": "pending",
             "result_path": None,
             "result_type": None,

@@ -14,6 +14,7 @@ router = APIRouter()
 ALLOWED_OPERATIONS = {
     "resize",
     "thumbnail",
+    "watermark",
     "video_thumbnail",
     "video_metadata",
     "video_compress",
@@ -38,11 +39,15 @@ def create_job(payload: CreateJobRequest):
             detail=("width and height required"),
         )
 
+    if payload.operation == "watermark" and not payload.watermark_text:
+        raise HTTPException(400, "watermark_text required")
+
     job = job_service.create_job(
         file_id=payload.file_id,
         operation=payload.operation,
         width=payload.width,
         height=payload.height,
+        watermark_text=payload.watermark_text,
     )
 
     process_job.delay(job["job_id"])
